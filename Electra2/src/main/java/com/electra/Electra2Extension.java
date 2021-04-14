@@ -23,8 +23,11 @@ import java.util.UUID;
 
 public class Electra2Extension extends ControllerExtension
 {
-	private HardwareSurface hardwareSurface;
-	
+	public HardwareSurface hardwareSurface;
+	public ControllerHost host;
+	public PinnableCursorDevice cursorDevice;
+	public CursorTrack cursorTrack; 
+
 	
    protected Electra2Extension(final Electra2ExtensionDefinition definition, final ControllerHost host)
    {
@@ -35,41 +38,33 @@ public class Electra2Extension extends ControllerExtension
    public void init()
    {
 	  
-      final ControllerHost host = getHost();
+      host = getHost();
       hardwareSurface = host.createHardwareSurface();
-      final MidiIn port = host.getMidiInPort (0);
+      final MidiIn inPort1 = host.getMidiInPort (0);
+      final MidiIn inPort2 = host.getMidiInPort (1);
+      final MidiOut outPort1 = host.getMidiOutPort (0);
+      final MidiOut outPort2 = host.getMidiOutPort (1);
 
-      
+      //Create hardware knobs
       AbsoluteHardwareKnob [] knob = new AbsoluteHardwareKnob[37];
-      
+      /*
       final MidiOut outPort2 = host.getMidiOutPort(1);
       final MidiOut outPort = host.getMidiOutPort(0);
+      */
       for( int i=0; i<37; i++) {
     	  knob[i] = this.hardwareSurface.createAbsoluteHardwareKnob("ABS_KNOB"+i);
-    	  knob[i].setAdjustValueMatcher(port.createAbsoluteCCValueMatcher(0, i));
+    	  knob[i].setAdjustValueMatcher(inPort1.createAbsoluteCCValueMatcher(0, i));
     	  
       }
-      /*
-      AbsoluteHardwareKnob knob = this.hardwareSurface.createAbsoluteHardwareKnob("ABS_KNOB");
-      AbsoluteHardwareKnob knob2 = this.hardwareSurface.createAbsoluteHardwareKnob("ABS_KNOB2");
-      AbsoluteHardwareKnob knob3 = this.hardwareSurface.createAbsoluteHardwareKnob("ABS_KNOB3");
-      AbsoluteHardwareKnob knob4 = this.hardwareSurface.createAbsoluteHardwareKnob("ABS_KNOB4");
-      
-      
-      knob.setAdjustValueMatcher(port.createAbsoluteCCValueMatcher(0, 1));
-      knob2.setAdjustValueMatcher(port.createAbsoluteCCValueMatcher(0, 2));
-      knob3.setAdjustValueMatcher(port.createAbsoluteCCValueMatcher(0, 3));
-      knob4.setAdjustValueMatcher(port.createAbsoluteCCValueMatcher(0, 4));
-      */
-      
+
       final UUID eClapID = UUID.fromString("89eba41d-46d3-4506-8ce6-ba9fe3e3bee4");
       final UUID fm4ID = UUID.fromString("7a0a94df-3aa4-4bb5-8e24-2511999871ad");
       
       
+      //Cursortracks and devices/banks
+      cursorTrack = host.createCursorTrack("ELECTRA_CURSOR_TRACK", "Cursor Track", 2, 0, true);
       
-      final CursorTrack cursorTrack = host.createCursorTrack("ELECTRA_CURSOR_TRACK", "Cursor Track", 2, 0, true);
-      
-      final PinnableCursorDevice cursorDevice = cursorTrack.createCursorDevice("ELECTRA_CURSOR_DEVICE", "Cursor Device", 0, CursorDeviceFollowMode.FOLLOW_SELECTION);
+      cursorDevice = cursorTrack.createCursorDevice("ELECTRA_CURSOR_DEVICE", "Cursor Device", 0, CursorDeviceFollowMode.FOLLOW_SELECTION);
       final SendBank sendBank1 = cursorTrack.sendBank(); 
       
       final SpecificPluginDevice fabQ3 = cursorDevice.createSpecificVst3Device("72C4DB717A4D459AB97E51745D84B39D");
@@ -78,6 +73,7 @@ public class Electra2Extension extends ControllerExtension
       final SpecificBitwigDevice fm4 = cursorDevice.createSpecificBitwigDevice(fm4ID);
       
       
+      //plugin parameters
       Parameter [] fabQ3Params = new Parameter[100];
       Parameter [] fabC2Params = new Parameter[100];
       Parameter [] eClapParams = new Parameter[100];
@@ -126,47 +122,38 @@ public class Electra2Extension extends ControllerExtension
     	  int parameterNumber = ParameterMappings.fm4[i];
     	  fm4Params[i].addBinding(knob[parameterNumber]);
       }
-      /*
-      Parameter fabQ3Freq = fabQ3.createParameter(2);
-  
-      Parameter fabQ3Gain = fabQ3.createParameter(3);
-      Parameter fabC2Freq = fabC2.createParameter(2);
-      Parameter fabC2Gain = fabC2.createParameter(3);
-      */
-      
+
+      //map to sends
       sendBank1.getItemAt(0).addBinding(knob[30]);
       sendBank1.getItemAt(1).addBinding(knob[31]);
-      /*
-      fabQ3Freq.addBinding(knob);
-      knob2.addBinding(fabQ3Gain);
-      fabC2Freq.addBinding(knob);
-      knob2.addBinding(fabC2Gain);
-      fabC2Gain.markInterested();
-		*/
+
       
-     /// a lot of out
+     /// send out prgrm change when plugin changes
       
       cursorDevice.name().addValueObserver((newName) -> {
     	  host.println(newName);
     	  if (newName.equals("FabFilter Pro-Q 3")) {
-    		outPort.sendMidi(0xc0, 1, 127); 
+    		outPort1.sendMidi(0xc0, 1, 127); 
     		outPort2.sendMidi(0xc0, 1, 127); 
     		};
     	  if (newName.equals("FabFilter Pro-C 2")) {
-        		outPort.sendMidi(0xc0, 2, 127); 
+        		outPort1.sendMidi(0xc0, 2, 127); 
         		outPort2.sendMidi(0xc0, 2, 127); 
         	};
     	  if (newName.equals("E-Clap")) {
-      		outPort.sendMidi(0xc0, 3, 127); 
+      		outPort1.sendMidi(0xc0, 3, 127); 
       		outPort2.sendMidi(0xc0, 3, 127); 
       		};
       	  if (newName.equals("FM-4")) {
-        		outPort.sendMidi(0xc0, 4, 127); 
+        		outPort1.sendMidi(0xc0, 4, 127); 
         		outPort2.sendMidi(0xc0, 4, 127); 
         	};
       });
-      
-      host.getMidiInPort(0).setMidiCallback((ShortMidiMessageReceivedCallback)msg -> {
+      /* midi in callback
+      /  change focused plugin and create plugins on prgm change messages
+      /
+      */
+      inPort1.setMidiCallback((ShortMidiMessageReceivedCallback)msg -> {
     	  if (msg.isProgramChange()) {
     		  if (msg.getData1() == 1) {
     			  cursorDevice.selectPrevious();
@@ -199,30 +186,13 @@ public class Electra2Extension extends ControllerExtension
 
    private void midiReceived(ShortMidiMessage msg) {
 	   
-	   /*
-	     
-	   if (msg.isProgramChange()) {
-		   if (msg.getData1() == 1) {
-			   getHost().getMidiOutPort(0).sendMidi(0xc0, 1, 0); 
-		   }
-		   if (msg.getData1() == 2) {
-			   getHost().getMidiOutPort(0).sendMidi(0xc0, 2, 0); 
-		   }
-		   if (msg.getData1() == 3) {
-			   getHost().getMidiOutPort(0).sendMidi(0xc0, 1, 0); 
-		   }
-		   if (msg.getData1() == 4) {
-			   getHost().getMidiOutPort(0).sendMidi(0xc0, 1, 0); 
-		   }
-	   }
-*/
-	
-}
+	  
+   }
 
 @Override
    public void exit()
    {
-
+		
       getHost().showPopupNotification("Electra2 Exited");
    }
 
@@ -234,11 +204,7 @@ public class Electra2Extension extends ControllerExtension
 	   
    }
 
-   public void sendMidiOut(int byte1, int byte2, int byte3)
-   {
-	   //getHost().getMidiOutPort(0).sendMidi(byte1, byte2, byte3);
-	   
-   }
+
 
 
 

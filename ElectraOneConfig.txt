@@ -1,0 +1,30 @@
+{
+   
+
+"midiControl":[
+   {
+      "event":"switchPage",
+      "eventParameter":1,
+      "midiMessage":"program",
+      "parameterNumber":1
+   },
+   {
+      "event":"switchPage",
+      "eventParameter":2,
+      "midiMessage":"program",
+      "parameterNumber":2
+   },
+   {
+      "event":"switchPage",
+      "eventParameter":3,
+      "midiMessage":"program",
+      "parameterNumber":3
+   },
+   {
+      "event":"switchPage",
+      "eventParameter":4,
+      "midiMessage":"program",
+      "parameterNumber":4
+   }
+   ]
+}

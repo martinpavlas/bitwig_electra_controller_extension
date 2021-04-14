@@ -1,1 +1,1 @@
-# bitwig_electra_controller_extension
+# Bitwig controller extension for Electra One controller 

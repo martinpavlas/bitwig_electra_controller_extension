@@ -8,6 +8,9 @@ public class ParameterMappings {
     //ProC2
     static int [] fabC2 = {1, 2, 5, 6, 3, 4, 8, 9, 18, 35, 10, 11, 34, 37, 12, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     
+    
+    //Be aware this is done the other way round, as there is not enough parameters to map all 36 knobs, so this is knob numbers in the arrays, not parameternumbers. 
+    //TODO: get a consistent mapping system for these
   //eClap
     static int [] eClap = {1, 7, 13, 19, 2, 8, 9, 15};
     
